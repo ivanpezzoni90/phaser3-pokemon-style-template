@@ -14,128 +14,126 @@ export default class Demo extends Phaser.Scene {
   }
 
   preload() {
-    this.load.image('sky', 'assets/sky.png');
-    this.load.image('ground', 'assets/platform.png');
-    this.load.image('star', 'assets/star.png');
-    this.load.image('bomb', 'assets/bomb.png');
-    this.load.spritesheet('dude', 
-        'assets/dude.png',
-        { frameWidth: 32, frameHeight: 48 }
+    this.load.image("tiles", "../assets/tuxmon-sample-32px-extruded.png");
+    this.load.tilemapTiledJSON("map", "../assets/tuxemon-town.json");
+
+    this.load.spritesheet('warrior', 
+        'assets/warriorArraySprite.png',
+        { frameWidth: 16, frameHeight: 18 }
     );
   }
 
   create() {
-    this.add.image(400, 300, 'sky');
-    this.platforms = this.physics.add.staticGroup();
+    const map = this.make.tilemap({ key: "map" });
 
-    this.scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px' });
+    const tileset = map.addTilesetImage("tuxmon-sample-32px-extruded", "tiles");
 
-    this.platforms.create(400, 568, 'ground').setScale(2).refreshBody();
+    const belowLayer = map.createLayer("Below Player", tileset, 0, 0);
+    const worldLayer = map.createLayer("World", tileset, 0, 0);
+    const aboveLayer = map.createLayer("Above Player", tileset, 0, 0);
 
-    this.platforms.create(600, 400, 'ground');
-    this.platforms.create(50, 250, 'ground');
-    this.platforms.create(750, 220, 'ground');
+    worldLayer.setCollisionByProperty({ collides: true });
+    aboveLayer.setDepth(10);
 
-    this.player = this.physics.add.sprite(100, 450, 'dude');
+    this.player = this.physics.add.sprite(100, 450, 'warrior');
+    this.player.setScale(2);
 
-    this.player.setBounce(0.2);
     this.player.setCollideWorldBounds(true);
-    this.player.body.setGravityY(300);
-
-    this.physics.add.collider(this.player, this.platforms);
+    this.physics.add.collider(this.player, worldLayer);
 
     this.anims.create({
-        key: 'left',
-        frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 3 }),
+        key: 'up',
+        frames: this.anims.generateFrameNumbers('warrior', { start: 0, end: 2 }),
         frameRate: 10,
         repeat: -1
     });
     
     this.anims.create({
-        key: 'turn',
-        frames: [ { key: 'dude', frame: 4 } ],
+        key: 'idle-down',
+        frames: [ { key: 'warrior', frame: 6 } ],
+        frameRate: 20
+    });
+    this.anims.create({
+        key: 'idle-up',
+        frames: [ { key: 'warrior', frame: 1 } ],
+        frameRate: 20
+    });
+    this.anims.create({
+        key: 'idle-left',
+        frames: [ { key: 'warrior', frame: 9 } ],
+        frameRate: 20
+    });
+    this.anims.create({
+        key: 'idle-right',
+        frames: [ { key: 'warrior', frame: 5 } ],
         frameRate: 20
     });
     
     this.anims.create({
         key: 'right',
-        frames: this.anims.generateFrameNumbers('dude', { start: 5, end: 8 }),
+        frames: this.anims.generateFrameNumbers('warrior', { start: 3, end: 5 }),
         frameRate: 10,
         repeat: -1
     });
 
-    this.stars = this.physics.add.group({
-        key: 'star',
-        repeat: 11,
-        setXY: { x: 12, y: 0, stepX: 70 }
+    this.anims.create({
+        key: 'down',
+        frames: this.anims.generateFrameNumbers('warrior', { start: 6, end: 8 }),
+        frameRate: 10,
+        repeat: -1
     });
 
-    this.stars.children.iterate(function (child: any) {
-        child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
+    this.anims.create({
+        key: 'left',
+        frames: this.anims.generateFrameNumbers('warrior', { start: 9, end: 11 }),
+        frameRate: 10,
+        repeat: -1
     });
-    this.physics.add.collider(this.stars, this.platforms);
 
-    const collectStar =  (player: any, star: any) => {
-        star.disableBody(true, true);
+    const camera = this.cameras.main;
+    camera.startFollow(this.player);
+    camera.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+  }
 
-        this.score += 10;
-        this.scoreText.setText('Score: ' + this.score);
-        if (this.stars.countActive(true) === 0) {
-            this.stars.children.iterate(function (child: any) {
-                child.enableBody(true, child.x, 0, true, true);
-            });
+    update(time: number, delta: number): void {
+        this.cursors = this.input.keyboard.createCursorKeys();
+        const speed = 175;
+        const prevVelocity = this.player.body.velocity.clone();
 
-            const x = (player.x < 400)
-                ? Phaser.Math.Between(400, 800)
-                : Phaser.Math.Between(0, 400);
+        // Stop any previous movement from the last frame
+        this.player.body.setVelocity(0);
+        this.player.body.velocity.normalize().scale(0.8);
 
-            const bomb = this.bombs.create(x, 16, 'bomb');
-            bomb.setBounce(1);
-            bomb.setCollideWorldBounds(true);
-            bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
+            // Horizontal movement
+        if (this.cursors.left.isDown) {
+            this.player.body.setVelocityX(-speed);
+        } else if (this.cursors.right.isDown) {
+            this.player.body.setVelocityX(speed);
         }
+        // Vertical movement
+        if (this.cursors.up.isDown) {
+            this.player.body.setVelocityY(-speed);
+        } else if (this.cursors.down.isDown) {
+            this.player.body.setVelocityY(speed);
+        }
+
+        this.player.body.velocity.normalize().scale(speed);
+
+        if (this.cursors.left.isDown) {
+            this.player.anims.play("left", true);
+          } else if (this.cursors.right.isDown) {
+            this.player.anims.play("right", true);
+          } else if (this.cursors.up.isDown) {
+            this.player.anims.play("up", true);
+          } else if (this.cursors.down.isDown) {
+            this.player.anims.play("down", true);
+          } else {
+            // If we were moving, pick and idle frame to use
+            if (prevVelocity.x < 0) this.player.anims.play("idle-left", true);
+            else if (prevVelocity.x > 0) this.player.anims.play("idle-right", true);
+            else if (prevVelocity.y < 0) this.player.anims.play("idle-up", true);
+            else if (prevVelocity.y > 0) this.player.anims.play("idle-down", true);
+          }
+
     }
-
-    this.physics.add.overlap(this.player, this.stars, collectStar, undefined, this);
-  }
-
-  update(time: number, delta: number): void {
-    this.cursors = this.input.keyboard.createCursorKeys();
-
-    if (this.cursors.left.isDown) {
-        this.player.setVelocityX(-160);
-
-        this.player.anims.play('left', true);
-    }
-    else if (this.cursors.right.isDown) {
-        this.player.setVelocityX(160);
-
-        this.player.anims.play('right', true);
-    }
-    else {
-        this.player.setVelocityX(0);
-
-        this.player.anims.play('turn');
-    }
-
-    if (this.cursors.up.isDown && this.player.body.touching.down) {
-        this.player.setVelocityY(-500);
-    }
-
-    this.bombs = this.physics.add.group();
-
-    this.physics.add.collider(this.bombs, this.platforms);
-
-    const hitBomb = (player: any, bomb: any) => {
-        this.physics.pause();
-
-        this.player.setTint(0xff0000);
-
-        this.player.anims.play('turn');
-
-        this.add.text(200, 300, 'GAME OVER Score: ' + this.score, { fontSize: '32px' });
-    }
-
-    this.physics.add.collider(this.player, this.bombs, hitBomb, undefined, this);
-  }
 }
