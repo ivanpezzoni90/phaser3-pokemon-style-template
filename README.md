@@ -1,12 +1,12 @@
 <h1 align="center">
   Phaser 3 Template for pokemon-style game
-  <br>
 </h1>
 
 [Phaser 3](https://github.com/photonstorm/phaser) template for pokemon-style game
 
 Credits:
 TS Starter: https://github.com/geocine/phaser3-rollup-typescript
+<br/>
 Sprites: https://limezu.itch.io/moderninteriors
 
 ## Available Commands
