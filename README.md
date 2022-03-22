@@ -1,9 +1,13 @@
 <h1 align="center">
-  Phaser 3 Tutorial game with TypeScript starter
+  Phaser 3 Template for pokemon-style game
   <br>
 </h1>
 
-This is a [Phaser 3](https://github.com/photonstorm/phaser) tutorial game, written in [TypeScript](https://www.typescriptlang.org/), using Typescript+Rollout [starter](https://github.com/geocine/phaser3-rollup-typescript)
+[Phaser 3](https://github.com/photonstorm/phaser) template for pokemon-style game
+
+Credits:
+TS Starter: https://github.com/geocine/phaser3-rollup-typescript
+Sprites: https://limezu.itch.io/moderninteriors
 
 ## Available Commands
 
